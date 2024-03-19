@@ -4,7 +4,7 @@ const mysql = require("mysql");
 const app = express();
 app.use(express.json());
 
-const port = 80;
+const port = 443;
 //let conn;
 
 // function reconnect() {
