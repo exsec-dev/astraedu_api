@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql");
 
 const app = express();
+const port = 3000;
 app.use(express.json());
 
 const pool = mysql.createPool({
@@ -15,5 +16,5 @@ const handlers = require('./handlers.js')(pool);
 app.use('/', handlers);
 
 app.listen(3000, () => {
-    console.log("ASTRA_EDU_BACK IS RUNNING ON PORT 80---------");
+    console.log(`ASTRA_EDU_BACK IS RUNNING ON PORT ${port}---------`);
 })
