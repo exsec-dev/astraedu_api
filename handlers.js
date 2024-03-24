@@ -1,6 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const authMiddleware = require('./authMiddleware');
 const router = express.Router();
+
+const generateAccessToken = (username) => {
+    const payload = { username };
+    return jwt.sign(payload, process.env.SECRET, { expiresIn: '72h' });
+}
 
 const encrypt = async (pass) => {
     const saltRounds = 10;
@@ -13,7 +20,7 @@ const compare = async (passToCheck, hash) => {
     return isEqual;
 }
 
-const getUser = (pool, username, callback) => {
+const getUser = async (pool, username, callback) => {
     pool.query('SELECT * FROM users WHERE username = ?', [username], (error, results) => {
         if (error) {
             console.error('Error getting user: ' + error.stack);
@@ -34,7 +41,18 @@ module.exports = (pool) => {
         pool.query('SELECT * FROM users', (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
-                res.status(500).send('Произошла ошибка при получении пользователей');
+                res.status(500).json({ message: 'Произошла ошибка при получении пользователей' });
+            } else {
+                res.json(results);
+            }
+        });
+    });
+
+    router.get('/user', authMiddleware, (req, res) => {
+        pool.query('SELECT * FROM users WHERE username = ?', [req.user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при получении пользователей' });
             } else {
                 res.json(results);
             }
@@ -42,7 +60,7 @@ module.exports = (pool) => {
     });
 
     // Adding new user
-    router.post('/users', (req, res) => {
+    router.post('/register', (req, res) => {
         const { username, password } = req.body;
 
         getUser(pool, username, (isUserExists, data) => {
@@ -53,7 +71,8 @@ module.exports = (pool) => {
                             console.error('Error adding new user ' + error.stack);
                             res.status(500).send('Error adding new user ' + error.stack);
                         } else {
-                            res.status(201).send('Ok');
+                            const token = generateAccessToken(username);
+                            res.status(201).json({ token });
                         }
                     });
                 })
@@ -62,7 +81,7 @@ module.exports = (pool) => {
                     res.status(500).send('Error encrypting pass ' + error);
                 });
             } else if (isUserExists === true) {
-                res.status(409).send('User already exists');
+                res.status(409).json({ message: 'Такой пользователь уже существует' });
             } else {
                 res.status(500).send('Error checking if user exists: ' + data);
             }
@@ -77,16 +96,17 @@ module.exports = (pool) => {
             if (isUserExists === true) {
                 compare(password, data?.password).then((isEqual) => {
                     if (isEqual) {
-                        res.status(200).send('Ok');
+                        const token = generateAccessToken(username);
+                        res.status(201).json({ token });
                     } else {
-                        res.status(401).send('Wrong credentials');
+                        res.status(401).json({ message: 'Неверный логин или пароль' });
                     }
                 }).catch((error) => {
                     console.error('Error comparing pass ' + error);
                     res.status(500).send('Error comparing pass ' + error);
                 });
             } else if (isUserExists === false) {
-                res.status(401).send('User not exists');
+                res.status(401).json({ message: 'Неверный логин или пароль' });
             } else {
                 res.status(500).send('Error checking if user exists: ' + data);
             }
