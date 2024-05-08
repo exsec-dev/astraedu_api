@@ -49,7 +49,8 @@ module.exports = (pool) => {
     });
 
     router.get('/user', authMiddleware, (req, res) => {
-        pool.query('SELECT * FROM users WHERE username = ?', [req.user], (error, results) => {
+        const { username } = req;
+        pool.query('SELECT * FROM users WHERE username = ?', [username], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при получении пользователей' });
@@ -59,7 +60,7 @@ module.exports = (pool) => {
         });
     });
 
-    // Adding new user
+    // Register user
     router.post('/register', (req, res) => {
         const { username, password } = req.body;
 
