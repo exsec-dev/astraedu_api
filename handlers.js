@@ -68,25 +68,31 @@ module.exports = (pool) => {
         getUser(pool, username, (isUserExists, data) => {
             if (isUserExists === false) {
                 encrypt(password).then((hash) => {
-                    const imageData = fs.readFileSync('./icons/avatar.jpg');
                     const query = `
                         INSERT INTO users (username, password, date)
                         VALUES (?, ?, ?);
-
-                        INSERT INTO userdata (username, points, coins, achievements, favorite_achievement, avatar)
-                        VALUES (?, ?, ?, ?, ?, ?);
                     `;
-                    const values = [
-                        [username, hash, (new Date()).toLocaleString()],
-                        [username, 0, 0, JSON.stringify(["quick_start"]), "quick_start", imageData]
-                    ];
+                    const values = [username, hash, (new Date()).toLocaleString()];
                     pool.query(query, values, (error, results) => {
                         if (error) {
                             console.error('Error adding new user ' + error.stack);
                             res.status(500).send('Error adding new user ' + error.stack);
                         } else {
-                            const token = generateAccessToken(username);
-                            res.status(201).json({ token });
+                            const query2 = `
+                                INSERT INTO userdata (username, points, coins, achievements, favorite_achievement, avatar)
+                                VALUES (?, ?, ?, ?, ?, ?);
+                            `;
+                            const imageData = fs.readFileSync('./icons/avatar.jpg');
+                            const values2 = [username, 0, 0, JSON.stringify(["quick_start"]), "quick_start", imageData];
+                            pool.query(query2, values2, (error, results) => {
+                                if (error) {
+                                    console.error('Error adding new user ' + error.stack);
+                                    res.status(500).send('Error adding new user ' + error.stack);
+                                } else {
+                                    const token = generateAccessToken(username);
+                                    res.status(201).json({ token });
+                                }
+                            });
                         }
                     });
                 })
