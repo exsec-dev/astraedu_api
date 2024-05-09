@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('./authMiddleware');
+const fs = require('fs');
 const router = express.Router();
 
 const generateAccessToken = (username) => {
@@ -49,13 +50,13 @@ module.exports = (pool) => {
     });
 
     router.get('/user', authMiddleware, (req, res) => {
-        const { username } = req;
-        pool.query('SELECT * FROM users WHERE username = ?', [username], (error, results) => {
+        const { user } = req;
+        pool.query('SELECT * FROM users WHERE username = ?', [user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при получении пользователей' });
             } else {
-                res.json(results);
+                res.json(results[0]);
             }
         });
     });
@@ -67,7 +68,19 @@ module.exports = (pool) => {
         getUser(pool, username, (isUserExists, data) => {
             if (isUserExists === false) {
                 encrypt(password).then((hash) => {
-                    pool.query('INSERT INTO users (username, password, date) VALUES (?, ?, ?)', [username, hash, (new Date()).toLocaleString()], (error, results) => {
+                    const imageData = fs.readFileSync('./icons/avatar.jpg');
+                    const query = `
+                        INSERT INTO users (username, password, date)
+                        VALUES (?, ?, ?);
+
+                        INSERT INTO userdata (username, points, coins, achievements, favorite_achievement, avatar)
+                        VALUES (?, ?, ?, ?, ?, ?);
+                    `;
+                    const values = [
+                        [username, hash, (new Date()).toLocaleString()],
+                        [username, 0, 0, JSON.stringify(["quick_start"]), "quick_start", imageData]
+                    ];
+                    pool.query(query, values, (error, results) => {
                         if (error) {
                             console.error('Error adding new user ' + error.stack);
                             res.status(500).send('Error adding new user ' + error.stack);
