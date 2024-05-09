@@ -51,12 +51,16 @@ module.exports = (pool) => {
 
     router.get('/user', authMiddleware, (req, res) => {
         const { user } = req;
-        pool.query('SELECT * FROM users WHERE username = ?', [user], (error, results) => {
+        const query = `
+            SELECT * FROM userdata WHERE username = ?;
+            SELECT * FROM modules WHERE username = ?;
+        `;
+        pool.query(query, [user, user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при получении пользователей' });
             } else {
-                res.json(results[0]);
+                res.json(results);
             }
         });
     });
@@ -71,28 +75,26 @@ module.exports = (pool) => {
                     const query = `
                         INSERT INTO users (username, password, date)
                         VALUES (?, ?, ?);
+
+                        INSERT INTO userdata (username, points, coins, achievements, favorite_achievement, avatar)
+                        VALUES (?, ?, ?, ?, ?, ?);
+
+                        INSERT INTO modules (username, intro, command_line)
+                        VALUES (?, ?, ?);
                     `;
-                    const values = [username, hash, (new Date()).toLocaleString()];
+                    const imageData = fs.readFileSync('./icons/avatar.jpg');
+                    const values = [
+                        [username, hash, (new Date()).toLocaleString()],
+                        [username, 5, 0, JSON.stringify(["quick_start"]), "quick_start", imageData],
+                        [username, JSON.stringify(["quick_start"]), JSON.stringify(["quick_start"])],
+                    ];
                     pool.query(query, values, (error, results) => {
                         if (error) {
                             console.error('Error adding new user ' + error.stack);
                             res.status(500).send('Error adding new user ' + error.stack);
                         } else {
-                            const query2 = `
-                                INSERT INTO userdata (username, points, coins, achievements, favorite_achievement, avatar)
-                                VALUES (?, ?, ?, ?, ?, ?);
-                            `;
-                            const imageData = fs.readFileSync('./icons/avatar.jpg');
-                            const values2 = [username, 0, 0, JSON.stringify(["quick_start"]), "quick_start", imageData];
-                            pool.query(query2, values2, (error, results) => {
-                                if (error) {
-                                    console.error('Error adding new user ' + error.stack);
-                                    res.status(500).send('Error adding new user ' + error.stack);
-                                } else {
-                                    const token = generateAccessToken(username);
-                                    res.status(201).json({ token });
-                                }
-                            });
+                            const token = generateAccessToken(username);
+                            res.status(201).json({ token });
                         }
                     });
                 })
