@@ -90,7 +90,7 @@ module.exports = (pool) => {
                                 VALUES (?, ?, ?, ?, ?, ?);
                             `;
                             const imageData = fs.readFileSync('./icons/avatar.jpg');
-                            const values2 = [username, 0, 0, JSON.stringify(["quick_start"]), "quick_start", imageData];
+                            const values2 = [username, 5, 0, JSON.stringify(["quick_start"]), "quick_start", imageData];
                             pool.query(query2, values2, (error, results) => {
                                 if (error) {
                                     console.error('Error adding new user ' + error.stack);
