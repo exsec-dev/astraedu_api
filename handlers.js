@@ -160,11 +160,30 @@ module.exports = (pool) => {
         const { coins } = req.query;
         const query = `
             UPDATE userdata
-            SET coins = coins - ${coins},
-                points = points + ${coins * 10}
+            SET coins = coins - ?,
+                points = points + ?
             WHERE username = ?;
         `;
-        pool.query(query, [user], (error, results) => {
+        pool.query(query, [coins, coins * 10, user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при обмене коинов' });
+            } else {
+                res.status(200).json({ message: 'Ok' });
+            }
+        });
+    });
+
+    // Set favorite achievement
+    router.get('/achievements/favorite', authMiddleware, (req, res) => {
+        const { user } = req;
+        const { favorite } = req.query;
+        const query = `
+            UPDATE userdata
+            SET favorite_achievement = ?
+            WHERE username = ?;
+        `;
+        pool.query(query, [favorite, user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при обмене коинов' });
