@@ -172,6 +172,85 @@ module.exports = (pool) => {
         });
     });
 
+    // Change user account data
+    router.post('/account', authMiddleware, (req, res) => {
+        const { user } = req;
+        const { username, password } = req.body;
+        const result = {};
+        // Changing password
+        if (!!password) {
+            encrypt(password).then((hash) => {
+                const query = `
+                    UPDATE users
+                    SET password = ?
+                    WHERE username = ?;
+                `;
+                pool.query(query, [hash, user], (error, results) => {
+                    if (error) {
+                        console.error('Error changing password ' + error.stack);
+                        res.status(500).send('Error changing password ' + error.stack);
+                    } else {
+                        const token = generateAccessToken(username);
+                        result.token = token;
+                    }
+                });
+            })
+            .catch((error) => {
+                console.error('Error encrypting pass ' + error);
+                res.status(500).send('Error encrypting pass ' + error);
+            });
+        }
+        // Changing username
+        if (!!username) {
+            getUser(pool, username, (isUserExists, data) => {
+                if (isUserExists === false) {
+                    const query = `
+                        UPDATE users
+                        SET username = ?
+                        WHERE username = ?;
+                    `;
+                    pool.query(query, [username, user], (error, results) => {
+                        if (error) {
+                            console.error('Error changing username ' + error.stack);
+                            res.status(500).send('Error changing username ' + error.stack);
+                        } else {
+                            const query2 = `
+                                UPDATE userdata
+                                SET username = ?
+                                WHERE username = ?;
+                            `;
+                            pool.query(query2, [username, user], (error, results) => {
+                                if (error) {
+                                    console.error('Error changing username ' + error.stack);
+                                    res.status(500).send('Error changing username ' + error.stack);
+                                } else {
+                                    const query3 = `
+                                        UPDATE modules
+                                        SET username = ?
+                                        WHERE username = ?;
+                                    `;
+                                    pool.query(query3, [username, user], (error, results) => {
+                                        if (error) {
+                                            console.error('Error changing username ' + error.stack);
+                                            res.status(500).send('Error changing username ' + error.stack);
+                                        } else {
+                                            result.message = 'Ok';
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                } else if (isUserExists === true) {
+                    res.status(409).json({ message: 'Такой пользователь уже существует' });
+                } else {
+                    res.status(500).send('Error checking if user exists: ' + data);
+                }
+            });
+        }
+        res.status(200).json(result);
+    });
+
     // Coins exchange
     router.get('/coins/exchange', authMiddleware, (req, res) => {
         const { user } = req;
