@@ -156,7 +156,8 @@ module.exports = (pool) => {
 
     // Coins exchange
     router.get('/coins/exchange', authMiddleware, (req, res) => {
-        const { user, coins } = req;
+        const { user } = req;
+        const { coins } = req.query;
         const query = `
             UPDATE userdata
             SET coins = coins - ${coins},
