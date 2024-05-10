@@ -49,6 +49,7 @@ module.exports = (pool) => {
         });
     });
 
+    // Get user data
     router.get('/user', authMiddleware, (req, res) => {
         const { user } = req;
         const query = `
@@ -149,6 +150,25 @@ module.exports = (pool) => {
                 res.status(401).json({ message: 'Неверный логин или пароль' });
             } else {
                 res.status(500).send('Error checking if user exists: ' + data);
+            }
+        });
+    });
+
+    // Coins exchange
+    router.get('/coins/exchange', authMiddleware, (req, res) => {
+        const { user, coins } = req;
+        const query = `
+            UPDATE userdata
+            SET coins = coins - ${coins},
+                points = points + ${coins * 10}
+            WHERE username = ?;
+        `;
+        pool.query(query, [user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при обмене коинов' });
+            } else {
+                res.status(200).json({ message: 'Ok' });
             }
         });
     });
