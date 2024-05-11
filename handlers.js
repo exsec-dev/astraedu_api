@@ -189,7 +189,7 @@ module.exports = (pool) => {
                         console.error('Error changing password ' + error.stack);
                         res.status(500).send('Error changing password ' + error.stack);
                     } else {
-                        const token = generateAccessToken(username);
+                        const token = generateAccessToken(user);
                         res.status(201).json({ token, message: "Пароль успешно изменен" });
                     }
                 });
@@ -233,7 +233,8 @@ module.exports = (pool) => {
                                             console.error('Error changing username ' + error.stack);
                                             res.status(500).send('Error changing username ' + error.stack);
                                         } else {
-                                            res.status(201).json({ message: "Логин успешно изменен" });
+                                            const token = generateAccessToken(username);
+                                            res.status(201).json({ token, message: "Логин успешно изменен" });
                                         }
                                     });
                                 }
@@ -283,6 +284,7 @@ module.exports = (pool) => {
                                                 console.error('Error changing username ' + error.stack);
                                                 res.status(500).send('Error changing username ' + error.stack);
                                             } else {
+                                                const token = generateAccessToken(username);
                                                 res.status(201).json({ token, message: "Логин и пароль успешно изменены" });
                                             }
                                         });
