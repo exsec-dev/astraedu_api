@@ -341,6 +341,25 @@ module.exports = (pool) => {
         });
     });
 
+    // Add achievement
+    router.get('/achievements/add', authMiddleware, (req, res) => {
+        const { user } = req;
+        const { achievement } = req.query;
+        const query = `
+            UPDATE userdata
+            SET achievements = JSON_ARRAY_APPEND(achievements, '$', ?)
+            WHERE username = ?;
+        `;
+        pool.query(query, [JSON.stringify(achievement), user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при добавлении достижения' });
+            } else {
+                res.status(200).json({ message: 'Ok' });
+            }
+        });
+    });
+
     // Set favorite achievement
     router.get('/achievements/favorite', authMiddleware, (req, res) => {
         const { user } = req;
