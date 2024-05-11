@@ -176,9 +176,8 @@ module.exports = (pool) => {
     router.post('/account', authMiddleware, (req, res) => {
         const { user } = req;
         const { username, password } = req.body;
-        const result = {};
         // Changing password
-        if (!!password) {
+        if (!!password && !username) {
             encrypt(password).then((hash) => {
                 const query = `
                     UPDATE users
@@ -191,7 +190,7 @@ module.exports = (pool) => {
                         res.status(500).send('Error changing password ' + error.stack);
                     } else {
                         const token = generateAccessToken(username);
-                        result.token = token;
+                        res.status(201).json({ token, message: "Пароль успешно изменен" });
                     }
                 });
             })
@@ -201,7 +200,7 @@ module.exports = (pool) => {
             });
         }
         // Changing username
-        if (!!username) {
+        if (!!username && !password) {
             getUser(pool, username, (isUserExists, data) => {
                 if (isUserExists === false) {
                     const query = `
@@ -234,7 +233,7 @@ module.exports = (pool) => {
                                             console.error('Error changing username ' + error.stack);
                                             res.status(500).send('Error changing username ' + error.stack);
                                         } else {
-                                            result.message = 'Ok';
+                                            res.status(201).json({ message: "Логин успешно изменен" });
                                         }
                                     });
                                 }
@@ -248,7 +247,61 @@ module.exports = (pool) => {
                 }
             });
         }
-        res.status(200).json(result);
+        // Changing both
+        if (!!username && !!password) {
+            getUser(pool, username, (isUserExists, data) => {
+                if (isUserExists === false) {
+                    encrypt(password).then((hash) => {
+                        const query = `
+                            UPDATE users
+                            SET username = ?,
+                                password = ?
+                            WHERE username = ?;
+                        `;
+                        pool.query(query, [username, hash, user], (error, results) => {
+                            if (error) {
+                                console.error('Error changing username & pass ' + error.stack);
+                                res.status(500).send('Error changing username & pass ' + error.stack);
+                            } else {
+                                const query2 = `
+                                    UPDATE userdata
+                                    SET username = ?
+                                    WHERE username = ?;
+                                `;
+                                pool.query(query2, [username, user], (error, results) => {
+                                    if (error) {
+                                        console.error('Error changing username ' + error.stack);
+                                        res.status(500).send('Error changing username ' + error.stack);
+                                    } else {
+                                        const query3 = `
+                                            UPDATE modules
+                                            SET username = ?
+                                            WHERE username = ?;
+                                        `;
+                                        pool.query(query3, [username, user], (error, results) => {
+                                            if (error) {
+                                                console.error('Error changing username ' + error.stack);
+                                                res.status(500).send('Error changing username ' + error.stack);
+                                            } else {
+                                                res.status(201).json({ token, message: "Логин и пароль успешно изменены" });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('Error encrypting pass ' + error);
+                        res.status(500).send('Error encrypting pass ' + error);
+                    });
+                } else if (isUserExists === true) {
+                    res.status(409).json({ message: 'Такой пользователь уже существует' });
+                } else {
+                    res.status(500).send('Error checking if user exists: ' + data);
+                }
+            });
+        }
     });
 
     // Coins exchange
