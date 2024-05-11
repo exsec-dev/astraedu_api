@@ -350,7 +350,7 @@ module.exports = (pool) => {
             SET achievements = JSON_ARRAY_APPEND(achievements, '$', ?)
             WHERE username = ?;
         `;
-        pool.query(query, [JSON.stringify(achievement), user], (error, results) => {
+        pool.query(query, [achievement, user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при добавлении достижения' });
