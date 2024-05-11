@@ -310,7 +310,7 @@ module.exports = (pool) => {
         const { user } = req;
         const { avatar } = req.body;
         const query = `UPDATE userdata SET avatar = ? WHERE username = ?;`;
-        const buffer = Buffer.from(avatar, 'base64');
+        const buffer = Buffer.from(avatar.split(';base64,').pop(), 'base64');
         pool.query(query, [buffer, user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
