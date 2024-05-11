@@ -306,7 +306,7 @@ module.exports = (pool) => {
     });
 
     // Set avatar
-    router.post('/avatar', (req, res) => {
+    router.post('/avatar', authMiddleware, (req, res) => {
         const { user } = req;
         const { avatar } = req.body;
         const query = `UPDATE userdata SET avatar = ? WHERE username = ?;`;
