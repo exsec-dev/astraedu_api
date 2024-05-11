@@ -100,7 +100,7 @@ module.exports = (pool) => {
                                         INSERT INTO modules (username, intro, command_line)
                                         VALUES (?, ?, ?);
                                     `;
-                                    const commandLineData = new Array(5).fill({progress: 0, details: [null, null, null, null, null], bonus: false});
+                                    const commandLineData = new Array(2).fill({progress: 0, details: [null, null, null, null, null], bonus: false});
                                     const introData = new Array(5).fill({status: 0});
                                     const values3 = [username, JSON.stringify(introData), JSON.stringify(commandLineData)];
                                     pool.query(query3, values3, (error, results) => {
