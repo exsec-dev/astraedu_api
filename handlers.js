@@ -166,7 +166,6 @@ module.exports = (pool) => {
                 res.status(200).json({
                     id: results[0].id,
                     username: results[0].username,
-                    avatar: results[0].avatar,
                 });
             }
         });
@@ -304,6 +303,22 @@ module.exports = (pool) => {
                 }
             });
         }
+    });
+
+    // Set avatar
+    router.post('/avatar', (req, res) => {
+        const { user } = req;
+        const { avatar } = req.body;
+        const query = `UPDATE userdata SET avatar = ? WHERE username = ?;`;
+        const buffer = Buffer.from(avatar, 'base64');
+        pool.query(query, [buffer, user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при смене аватара' });
+            } else {
+                res.status(200).json({ message: 'Ok' });
+            }
+        });
     });
 
     // Coins exchange
