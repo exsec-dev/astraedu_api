@@ -101,7 +101,8 @@ module.exports = (pool) => {
                                         VALUES (?, ?, ?);
                                     `;
                                     const introData = [{status: 1}, {status: 0}];
-                                    const commandLineData = new Array(5).fill({progress: 0, details: [null, null, null, null, null], bonus: false});                                    
+                                    const commandLineData = new Array(4).fill({progress: 0, details: [null, null, null, null, null], bonus: false, retry_count: 3});
+                                    commandLineData.push({progress: 0, details: [null], bonus: true});          
                                     const values3 = [username, JSON.stringify(introData), JSON.stringify(commandLineData)];
                                     pool.query(query3, values3, (error, results) => {
                                         if (error) {
@@ -347,7 +348,7 @@ module.exports = (pool) => {
         pool.query(query, [], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
-                res.status(500).json({ message: 'Произошла ошибка при обмене коинов' });
+                res.status(500).json({ message: 'Произошла ошибка при получении таблицы лидеров' });
             } else {
                 res.status(200).json(results);
             }
