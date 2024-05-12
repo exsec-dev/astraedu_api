@@ -341,6 +341,19 @@ module.exports = (pool) => {
         });
     });
 
+    // Get all users data
+    router.get('/leaderboard', authMiddleware, (req, res) => {
+        const query = `SELECT * FROM userdata ORDER BY points DESC;`;
+        pool.query(query, [], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при обмене коинов' });
+            } else {
+                res.status(200).json(results);
+            }
+        });
+    });
+
     // Add achievement
     router.get('/achievements/add', authMiddleware, (req, res) => {
         const { user } = req;
