@@ -101,8 +101,8 @@ module.exports = (pool) => {
                                         VALUES (?, ?, ?);
                                     `;
                                     const introData = [{status: 1}, {status: 0}];
-                                    const commandLineData = new Array(4).fill({progress: 0, details: [null, null, null, null, null], bonus: false, retry_count: 3});
-                                    commandLineData.push({progress: 0, details: [null], bonus: true});          
+                                    const commandLineData = new Array(4).fill({progress: 0, details: [null, null, null, null, null], bonus: false, retry_count: 3, status: 0});
+                                    commandLineData.push({progress: 0, details: [null], bonus: true, status: 0});          
                                     const values3 = [username, JSON.stringify(introData), JSON.stringify(commandLineData)];
                                     pool.query(query3, values3, (error, results) => {
                                         if (error) {
