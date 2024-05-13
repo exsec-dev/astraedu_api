@@ -370,7 +370,11 @@ module.exports = (pool) => {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при добавлении достижения' });
             } else {
-                res.status(200).json({ message: 'Ok' });
+                if (results.affectedRows) {
+                    res.status(200).json({ message: 'Ok' });
+                } else {
+                    res.status(400).json({ message: 'Достижение уже существует' });
+                }
             }
         });
     });
