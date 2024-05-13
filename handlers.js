@@ -362,9 +362,10 @@ module.exports = (pool) => {
         const query = `
             UPDATE userdata
             SET achievements = JSON_ARRAY_APPEND(achievements, '$', ?)
-            WHERE username = ?;
+            WHERE JSON_SEARCH(achievements, 'one', ?) IS NULL
+            AND username = ?;
         `;
-        pool.query(query, [achievement, user], (error, results) => {
+        pool.query(query, [achievement, achievement, user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при добавлении достижения' });
