@@ -361,11 +361,12 @@ module.exports = (pool) => {
         const { achievement } = req.query;
         const query = `
             UPDATE userdata
-            SET achievements = JSON_ARRAY_APPEND(achievements, '$', ?)
+            SET achievements = JSON_ARRAY_APPEND(achievements, '$', ?),
+                points = points + ?
             WHERE JSON_SEARCH(achievements, 'one', ?) IS NULL
             AND username = ?;
         `;
-        pool.query(query, [achievement, achievement, user], (error, results) => {
+        pool.query(query, [achievement, 5, achievement, user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при добавлении достижения' });
@@ -394,6 +395,45 @@ module.exports = (pool) => {
                 res.status(500).json({ message: 'Ошибка при смене достижения' });
             } else {
                 res.status(200).json({ message: 'Ok' });
+            }
+        });
+    });
+
+    // Change module status
+    router.get('/module/status', authMiddleware, (req, res) => {
+        const { user } = req;
+        const { status, module, id } = req.query;
+        const moduleMap = {
+            "Введение": "intro",
+            "Командная строка": "command_line"
+        };
+        const query = `
+            UPDATE modules
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$.[${id}].status', ${status})
+            WHERE username = ?;
+        `;
+        pool.query(query, [user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при изменении статуса' });
+            } else {
+                if (module === "Введение" && status === 2) {
+                    const query2 = `
+                        UPDATE userdata
+                        SET points = points + 5
+                        WHERE username = ?;
+                    `;
+                    pool.query(query2, [user], (error, results) => {
+                        if (error) {
+                            console.error('GET error: ' + error.stack);
+                            res.status(500).json({ message: 'Произошла ошибка при добавлении очков' });
+                        } else {
+                            res.status(200).json({ message: 'Ok' });
+                        }
+                    });
+                } else {
+                    res.status(200).json({ message: 'Ok' });
+                }
             }
         });
     });
