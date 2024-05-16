@@ -438,5 +438,55 @@ module.exports = (pool) => {
         });
     });
 
+    // Set answer
+    router.get('/module/answer', authMiddleware, (req, res) => {
+        const { user } = req;
+        const { answer, question, module, chapter, is_correct } = req.query;
+        const moduleMap = {
+            "Введение": "intro",
+            "Командная строка": "command_line"
+        };
+        const query = `
+            UPDATE modules
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].details.[${question}]', ${answer})
+            ${is_correct ? `${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', $[${chapter}].progress + 1)` : ''}
+            WHERE username = ?;
+        `;
+        pool.query(query, [user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при изменении ответа' });
+            } else {
+                if (is_correct) {
+                    const query2 = `
+                        UPDATE userdata
+                        SET points = points + 1
+                        WHERE username = ?;
+                    `;
+                    pool.query(query2, [user], (error, results) => {
+                        if (error) {
+                            console.error('GET error: ' + error.stack);
+                            res.status(500).json({ message: 'Произошла ошибка при добавлении очков' });
+                        }
+                    });
+                }
+                const query3 = `
+                    UPDATE modules
+                    SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].status', 2)
+                    ${chapter < 4 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter + 1}].status', 1)` : ''}
+                    WHERE JSON_VALUE(${moduleMap[module]}, '$[${chapter}].details\[\*]') IS NOT NULL;
+                `;
+                pool.query(query3, [user], (error, results) => {
+                    if (error) {
+                        console.error('GET error: ' + error.stack);
+                        res.status(500).json({ message: 'Произошла ошибка при изменении статуса' });
+                    } else {
+                        res.status(200).json({ message: 'Ok' });
+                    }
+                });
+            }
+        });
+    });
+
     return router;
 };
