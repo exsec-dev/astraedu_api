@@ -449,7 +449,7 @@ module.exports = (pool) => {
         const query = `
             UPDATE modules
             SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].details.[${question}]', '${answer}')
-            ${is_correct ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', JSON_VALUE(${moduleMap[module]}, '$[${chapter}].progress') + 1)` : ''}
+            ${is_correct ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].progress') + 1)` : ''}
             WHERE username = ?;
         `;
         pool.query(query, [user], (error, results) => {
@@ -474,7 +474,7 @@ module.exports = (pool) => {
                     UPDATE modules
                     SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].status', 2)
                     ${chapter < 4 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter + 1}].status', 1)` : ''}
-                    WHERE JSON_VALUE(${moduleMap[module]}, '$[${chapter}].details\[\*]') IS NOT NULL;
+                    WHERE JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details\[\*]') IS NOT NULL;
                 `;
                 pool.query(query3, [user], (error, results) => {
                     if (error) {
