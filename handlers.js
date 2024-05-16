@@ -452,8 +452,7 @@ module.exports = (pool) => {
             ${JSON.parse(is_correct) ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].progress') + 1)` : ''}
             WHERE username = ?;
         `;
-        console.log(typeof is_correct)
-        console.log(typeof JSON.parse(is_correct))
+        console.log(JSON.parse(is_correct))
         pool.query(query, [user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
