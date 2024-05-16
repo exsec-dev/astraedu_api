@@ -452,13 +452,12 @@ module.exports = (pool) => {
             ${JSON.parse(is_correct) ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].progress') + 1)` : ''}
             WHERE username = ?;
         `;
-        console.log(JSON.parse(is_correct))
         pool.query(query, [user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при изменении ответа' });
             } else {
-                if (is_correct) {
+                if (JSON.parse(is_correct)) {
                     const query2 = `
                         UPDATE userdata
                         SET points = points + 1
@@ -486,6 +485,30 @@ module.exports = (pool) => {
                         res.status(200).json({ message: 'Ok' });
                     }
                 });
+            }
+        });
+    });
+
+    // Decrease try count
+    router.get('/module/retry', authMiddleware, (req, res) => {
+        const { user } = req;
+        const { question, module, chapter } = req.query;
+        const moduleMap = {
+            "Введение": "intro",
+            "Командная строка": "command_line"
+        };
+        const query = `
+            UPDATE modules
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].retry_count', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].retry_count') - 1),
+            ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].details[${question}]', null)
+            WHERE username = ?;
+        `;
+        pool.query(query, [user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при списывании попытки' });
+            } else {
+                res.status(200).json({ message: 'Ok' });
             }
         });
     });
