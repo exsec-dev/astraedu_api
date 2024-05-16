@@ -402,10 +402,14 @@ module.exports = (pool) => {
     // Change module status
     router.get('/module/status', authMiddleware, (req, res) => {
         const { user } = req;
-        const { status, id } = req.query;
+        const { status, module, id } = req.query;
+        const moduleMap = {
+            "Введение": "intro",
+            "Командная строка": "command_line"
+        };
         const query = `
             UPDATE modules
-            SET intro = JSON_SET(intro, '$[${id}].status', ${status})
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${id}].status', ${status})
             WHERE username = ?;
         `;
         pool.query(query, [user], (error, results) => {
@@ -413,7 +417,7 @@ module.exports = (pool) => {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при изменении статуса' });
             } else {
-                if (parseInt(status) === 2) {
+                if (module === "Введение" && parseInt(status) === 2) {
                     const query2 = `
                         UPDATE userdata
                         SET points = points + 5
