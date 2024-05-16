@@ -452,7 +452,6 @@ module.exports = (pool) => {
             ${is_correct ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].progress') + 1)` : ''}
             WHERE username = ?;
         `;
-        console.log(query)
         pool.query(query, [user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
@@ -475,7 +474,7 @@ module.exports = (pool) => {
                     UPDATE modules
                     SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].status', 2)
                     ${chapter < 4 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter + 1}].status', 1)` : ''}
-                    WHERE JSON_LENGTH(JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details')) = JSON_LENGTH(JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details')) - JSON_LENGTH(JSON_VALUE(JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details'), '$.[* == null]'))
+                    WHERE JSON_LENGTH(JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details')) = JSON_LENGTH(JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details')) - JSON_LENGTH(JSON_SEARCH(JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details'), 'one', null, null, '$.[* == null]'))
                     AND username = ?;
                 `;
                 pool.query(query3, [user], (error, results) => {
