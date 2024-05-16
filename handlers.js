@@ -448,7 +448,7 @@ module.exports = (pool) => {
         };
         const query = `
             UPDATE modules
-            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].details.[${question}]', '${answer}')
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].details.$[${question}]', '${answer}')
             ${is_correct ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].progress') + 1)` : ''}
             WHERE username = ?;
         `;
