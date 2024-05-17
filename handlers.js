@@ -322,6 +322,39 @@ module.exports = (pool) => {
         });
     });
 
+    // Add new review
+    router.post('/review', authMiddleware, (req, res) => {
+        const { user } = req;
+        const { review } = req.body;
+        const query = `INSERT INTO reviews (username, review, date) VALUES (?, ?, ?);`;
+        pool.query(query, [user, review, (new Date()).toLocaleString()], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при добавлении отзыва' });
+            } else {
+                res.status(200).json({ message: 'Ok' });
+            }
+        });
+    });
+
+    // Add new review
+    router.get('/review', authMiddleware, (req, res) => {
+        const { user } = req;
+        const query = `SELECT * FROM reviews WHERE username = ?`;
+        pool.query(query, [user], (error, results) => {
+            if (error) {
+                console.error('GET error: ' + error.stack);
+                res.status(500).json({ message: 'Произошла ошибка при получении отзыва' });
+            } else {
+                if (results.affectedRows) {
+                    res.status(400).json({ message: 'Вы уже отправили отзыв' });
+                } else {
+                    res.status(200).json({ message: 'Ok' });
+                }
+            }
+        });
+    });
+
     // Coins exchange
     router.get('/coins/exchange', authMiddleware, (req, res) => {
         const { user } = req;
@@ -473,7 +506,7 @@ module.exports = (pool) => {
                 const query3 = `
                     UPDATE modules
                     SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].status', 2)
-                    ${parseInt(chapter) < 4 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)` : ''}
+                    ${parseInt(chapter) < 3 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)` : ''}
                     WHERE JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].details') NOT LIKE '%null%'
                     AND username = ?;
                 `;
