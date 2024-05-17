@@ -332,7 +332,7 @@ module.exports = (pool) => {
                 points = points + ?
             WHERE username = ?;
         `;
-        pool.query(query, [coins, coins * 10, user], (error, results) => {
+        pool.query(query, [parseInt(coins), parseInt(coins) * 10, user], (error, results) => {
             if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при обмене коинов' });
@@ -409,7 +409,7 @@ module.exports = (pool) => {
         };
         const query = `
             UPDATE modules
-            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${id}].status', ${status})
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${id}].status', ${parseInt(status)})
             WHERE username = ?;
         `;
         pool.query(query, [user], (error, results) => {
@@ -448,8 +448,8 @@ module.exports = (pool) => {
         };
         const query = `
             UPDATE modules
-            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].details[${question}]', '${answer}')
-            ${JSON.parse(is_correct) ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].progress') + 1)` : ''}
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].details[${parseInt(question)}]', '${answer}')
+            ${JSON.parse(is_correct) ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].progress') + 1)` : ''}
             WHERE username = ?;
         `;
         pool.query(query, [user], (error, results) => {
@@ -472,9 +472,9 @@ module.exports = (pool) => {
                 }
                 const query3 = `
                     UPDATE modules
-                    SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].status', 2)
-                    ${chapter < 4 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter + 1}].status', 1)` : ''}
-                    WHERE JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].details') NOT LIKE '%null%'
+                    SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].status', 2)
+                    ${parseInt(chapter) < 4 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)` : ''}
+                    WHERE JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].details') NOT LIKE '%null%'
                     AND username = ?;
                 `;
                 pool.query(query3, [user], (error, results) => {
@@ -499,8 +499,8 @@ module.exports = (pool) => {
         };
         const query = `
             UPDATE modules
-            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].retry_count', JSON_EXTRACT(${moduleMap[module]}, '$[${chapter}].retry_count') - 1),
-            ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${chapter}].details[${question}]', null)
+            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].retry_count', JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].retry_count') - 1),
+            ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].details[${parseInt(question)}]', null)
             WHERE username = ?;
         `;
         pool.query(query, [user], (error, results) => {
