@@ -337,7 +337,7 @@ module.exports = (pool) => {
         });
     });
 
-    // Add new review
+    // Get reviews
     router.get('/review', authMiddleware, (req, res) => {
         const { user } = req;
         const query = `SELECT * FROM reviews WHERE username = ?`;
@@ -346,7 +346,7 @@ module.exports = (pool) => {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при получении отзыва' });
             } else {
-                if (results.affectedRows) {
+                if (results.length) {
                     res.status(400).json({ message: 'Вы уже отправили отзыв' });
                 } else {
                     res.status(200).json({ message: 'Ok' });
