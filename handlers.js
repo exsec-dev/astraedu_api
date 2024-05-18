@@ -539,7 +539,7 @@ module.exports = (pool) => {
                                                             console.error('GET error: ' + error.stack);
                                                             res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
                                                         } else {
-                                                            res.status(200).json({ message: 'Ok' });
+                                                            res.status(200).json({ message: 'Bonus' });
                                                         }
                                                     });
                                                 } else {
