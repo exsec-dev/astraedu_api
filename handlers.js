@@ -507,7 +507,7 @@ module.exports = (pool) => {
                     const query4 = `
                         UPDATE modules
                         SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)
-                        WHERE JSON_ARRAY_LENGTH(JSON_SEARCH(${moduleMap[module]}, '$[*].progress', 5)) = 4 AND username = ?;
+                        WHERE JSON_LENGTH(JSON_SEARCH(${moduleMap[module]}, '$[*].progress', 5)) = 4 AND username = ?;
                     `;
                     pool.query(query4, [user], (error, results) => {
                         if (error) {
