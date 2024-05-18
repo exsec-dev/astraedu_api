@@ -507,23 +507,24 @@ module.exports = (pool) => {
                     const query4 = `
                         UPDATE modules
                         SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)
-                        WHERE JSON_SEARCH(${moduleMap[module]}, 'one', '$[*].progress != 5') = 1 AND username = ?;
+                        WHERE JSON_LENGTH(JSON_SEARCH(${moduleMap[module]}, 'one', '$[*].progress != 5')) = 1 AND username = ?;
                     `;
                     pool.query(query4, [user], (error, results) => {
                         if (error) {
                             console.error('GET error: ' + error.stack);
                             res.status(500).json({ message: 'Произошла ошибка при изменении статуса бонуса' });
-                        }
-                    });
-                    const query5 = `
-                        UPDATE userdata
-                        SET coins = coins + 1
-                        WHERE username = ?;
-                    `;
-                    pool.query(query5, [user], (error, results) => {
-                        if (error) {
-                            console.error('GET error: ' + error.stack);
-                            res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
+                        } else {
+                            const query5 = `
+                                UPDATE userdata
+                                SET coins = coins + 1
+                                WHERE username = ?;
+                            `;
+                            pool.query(query5, [user], (error, results) => {
+                                if (error) {
+                                    console.error('GET error: ' + error.stack);
+                                    res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
+                                }
+                            });
                         }
                     });
                 }
