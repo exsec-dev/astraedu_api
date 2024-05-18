@@ -503,6 +503,34 @@ module.exports = (pool) => {
                         }
                     });
                 }
+                if (parseInt(chapter) === 3) {
+                    const query4 = `
+                        UPDATE modules
+                        SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)
+                        WHERE 4 = JSON_ARRAY_LENGTH(${moduleMap[module]}) = (
+                            SELECT COUNT(*)
+                            FROM JSON_TABLE(${moduleMap[module]}, '$')
+                            WHERE JSON_EXTRACT('$.progress') = 5
+                        ) AND username = ?;
+                    `;
+                    pool.query(query4, [user], (error, results) => {
+                        if (error) {
+                            console.error('GET error: ' + error.stack);
+                            res.status(500).json({ message: 'Произошла ошибка при изменении статуса бонуса' });
+                        }
+                    });
+                    const query5 = `
+                        UPDATE userdata
+                        SET coins = coins + 1,
+                        WHERE username = ?;
+                    `;
+                    pool.query(query5, [user], (error, results) => {
+                        if (error) {
+                            console.error('GET error: ' + error.stack);
+                            res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
+                        }
+                    });
+                }
                 const query3 = `
                     UPDATE modules
                     SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].status', 2)
