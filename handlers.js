@@ -490,57 +490,63 @@ module.exports = (pool) => {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при изменении ответа' });
             } else {
-                if (JSON.parse(is_correct)) {
-                    const query2 = `
-                        UPDATE userdata
-                        SET points = points + 1
-                        WHERE username = ?;
-                    `;
-                    pool.query(query2, [user], (error, results) => {
-                        if (error) {
-                            console.error('GET error: ' + error.stack);
-                            res.status(500).json({ message: 'Произошла ошибка при добавлении очков' });
-                        }
-                    });
-                }
-                if (parseInt(chapter) === 3) {
-                    const query4 = `
-                        UPDATE modules
-                        SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)
-                        WHERE JSON_LENGTH(JSON_SEARCH(${moduleMap[module]}, 'one', '$[*].progress != 5')) = 1 AND username = ?;
-                    `;
-                    pool.query(query4, [user], (error, results) => {
-                        if (error) {
-                            console.error('GET error: ' + error.stack);
-                            res.status(500).json({ message: 'Произошла ошибка при изменении статуса бонуса' });
-                        } else {
-                            const query5 = `
-                                UPDATE userdata
-                                SET coins = coins + 1
-                                WHERE username = ?;
-                            `;
-                            pool.query(query5, [user], (error, results) => {
-                                if (error) {
-                                    console.error('GET error: ' + error.stack);
-                                    res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
-                                }
-                            });
-                        }
-                    });
-                }
-                const query3 = `
+                const query2 = `
                     UPDATE modules
                     SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].status', 2)
                     ${parseInt(chapter) < 3 ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)` : ''}
                     WHERE JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].details') NOT LIKE '%null%'
                     AND username = ?;
                 `;
-                pool.query(query3, [user], (error, results) => {
+                pool.query(query2, [user], (error, results) => {
                     if (error) {
                         console.error('GET error: ' + error.stack);
                         res.status(500).json({ message: 'Произошла ошибка при изменении статуса' });
                     } else {
-                        res.status(200).json({ message: 'Ok' });
+                        if (JSON.parse(is_correct)) {
+                            const query3 = `
+                                UPDATE userdata
+                                SET points = points + 1
+                                WHERE username = ?;
+                            `;
+                            pool.query(query3, [user], (error, results) => {
+                                if (error) {
+                                    console.error('GET error: ' + error.stack);
+                                    res.status(500).json({ message: 'Произошла ошибка при добавлении очков' });
+                                } else {
+                                    if (parseInt(chapter) === 3) {
+                                        const query4 = `
+                                            UPDATE modules
+                                            SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)
+                                            WHERE JSON_LENGTH(JSON_SEARCH(${moduleMap[module]}, 'one', '$[*].progress != 5')) = 1 AND username = ?;
+                                        `;
+                                        pool.query(query4, [user], (error, results) => {
+                                            if (error) {
+                                                console.error('GET error: ' + error.stack);
+                                                res.status(500).json({ message: 'Произошла ошибка при изменении статуса бонуса' });
+                                            } else {
+                                                const query5 = `
+                                                    UPDATE userdata
+                                                    SET coins = coins + 1
+                                                    WHERE username = ?;
+                                                `;
+                                                pool.query(query5, [user], (error, results) => {
+                                                    if (error) {
+                                                        console.error('GET error: ' + error.stack);
+                                                        res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
+                                                    } else {
+                                                        res.status(200).json({ message: 'Ok' });
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        res.status(200).json({ message: 'Ok' });
+                                    }
+                                }
+                            });
+                        } else {
+                            res.status(200).json({ message: 'Ok' });
+                        }
                     }
                 });
             }
