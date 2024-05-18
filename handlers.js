@@ -487,10 +487,10 @@ module.exports = (pool) => {
             AND JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].details[${parseInt(question)}]') LIKE '%null%';
         `;
         pool.query(query, [user], (error, results) => {
-            if (error || !results.affectedRows) {
+            if (error) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при изменении ответа' });
-            } else {
+            } else if (!!results?.affectedRows) {
                 const query2 = `
                     UPDATE modules
                     SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].status', 2)
@@ -558,6 +558,8 @@ module.exports = (pool) => {
                         }
                     }
                 });
+            } else {
+                res.status(500).json({ message: 'Ответ уже дан' });
             }
         });
     });
