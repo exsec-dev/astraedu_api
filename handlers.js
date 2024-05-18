@@ -521,7 +521,7 @@ module.exports = (pool) => {
                     });
                     const query5 = `
                         UPDATE userdata
-                        SET coins = coins + 1,
+                        SET coins = coins + 1
                         WHERE username = ?;
                     `;
                     pool.query(query5, [user], (error, results) => {
