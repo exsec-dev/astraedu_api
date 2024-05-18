@@ -517,26 +517,34 @@ module.exports = (pool) => {
                                         const query4 = `
                                             UPDATE modules
                                             SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter) + 1}].status', 1)
-                                            WHERE JSON_LENGTH(JSON_SEARCH(${moduleMap[module]}, 'all', '$[*].progress == 5')) = 4 AND username = ?;
+                                            WHERE JSON_EXTRACT(${moduleMap[module]}, '$[0].progress') = 5
+                                            AND JSON_EXTRACT(${moduleMap[module]}, '$[1].progress') = 5
+                                            AND JSON_EXTRACT(${moduleMap[module]}, '$[2].progress') = 5
+                                            AND JSON_EXTRACT(${moduleMap[module]}, '$[3].progress') = 5
+                                            AND username = ?;
                                         `;
                                         pool.query(query4, [user], (error, results) => {
                                             if (error) {
                                                 console.error('GET error: ' + error.stack);
                                                 res.status(500).json({ message: 'Произошла ошибка при изменении статуса бонуса' });
                                             } else {
-                                                const query5 = `
-                                                    UPDATE userdata
-                                                    SET coins = coins + 1
-                                                    WHERE username = ?;
-                                                `;
-                                                pool.query(query5, [user], (error, results) => {
-                                                    if (error) {
-                                                        console.error('GET error: ' + error.stack);
-                                                        res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
-                                                    } else {
-                                                        res.status(200).json({ message: 'Ok' });
-                                                    }
-                                                });
+                                                if (results.affectedRows) {
+                                                    const query5 = `
+                                                        UPDATE userdata
+                                                        SET coins = coins + 1
+                                                        WHERE username = ?;
+                                                    `;
+                                                    pool.query(query5, [user], (error, results) => {
+                                                        if (error) {
+                                                            console.error('GET error: ' + error.stack);
+                                                            res.status(500).json({ message: 'Произошла ошибка при добавлении коинов' });
+                                                        } else {
+                                                            res.status(200).json({ message: 'Ok' });
+                                                        }
+                                                    });
+                                                } else {
+                                                    res.status(200).json({ message: 'Ok' });
+                                                }
                                             }
                                         });
                                     } else {
