@@ -483,10 +483,11 @@ module.exports = (pool) => {
             UPDATE modules
             SET ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].details[${parseInt(question)}]', '${answer}')
             ${JSON.parse(is_correct) ? `, ${moduleMap[module]} = JSON_SET(${moduleMap[module]}, '$[${parseInt(chapter)}].progress', JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].progress') + 1)` : ''}
-            WHERE username = ?;
+            WHERE username = ?
+            AND JSON_EXTRACT(${moduleMap[module]}, '$[${parseInt(chapter)}].details[${parseInt(question)}]') LIKE '%null%';
         `;
         pool.query(query, [user], (error, results) => {
-            if (error) {
+            if (error || !results.affectedRows) {
                 console.error('GET error: ' + error.stack);
                 res.status(500).json({ message: 'Произошла ошибка при изменении ответа' });
             } else {
