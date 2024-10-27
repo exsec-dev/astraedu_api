@@ -1,6 +1,5 @@
 {
   "name": "astra_edu_back",
-  "homepage": "/api",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
