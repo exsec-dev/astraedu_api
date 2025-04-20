@@ -14,7 +14,7 @@ const pool = mysql.createPool({
 });
 
 const handlers = require('./handlers.js')(pool);
-app.use('/', handlers);
+app.use('/astraedu_api', handlers);
 
 app.listen(port, () => {
     console.log(`ASTRA_EDU_BACK IS RUNNING ON PORT ${port}---------`);

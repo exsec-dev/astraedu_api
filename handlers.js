@@ -37,7 +37,6 @@ const getUser = async (pool, username, callback) => {
 }
 
 module.exports = (pool) => {
-
     router.get('/users', (req, res) => {
         pool.query('SELECT * FROM users', (error, results) => {
             if (error) {
@@ -97,13 +96,13 @@ module.exports = (pool) => {
                                     res.status(500).send('Error adding new user ' + error.stack);
                                 } else {
                                     const query3 = `
-                                        INSERT INTO modules (username, intro, command_line)
-                                        VALUES (?, ?, ?);
+                                        INSERT INTO modules (username, intro, command_line, file_system)
+                                        VALUES (?, ?, ?, ?);
                                     `;
-                                    const introData = [{status: 1}, {status: 0}];
-                                    const commandLineData = new Array(4).fill({progress: 0, details: [null, null, null, null, null], bonus: false, retry_count: 3, status: 0});
-                                    commandLineData.push({progress: 0, details: [null], bonus: true, status: 0});          
-                                    const values3 = [username, JSON.stringify(introData), JSON.stringify(commandLineData)];
+                                    const introData = [{ status: 1 }, { status: 0 }];
+                                    const moduleData = new Array(4).fill({ progress: 0, details: [null, null, null, null, null], bonus: false, retry_count: 3, status: 0 });
+                                    moduleData.push({ progress: 0, details: [null], bonus: true, status: 0 });
+                                    const values3 = [username, JSON.stringify(introData), JSON.stringify(moduleData), JSON.stringify(moduleData)];
                                     pool.query(query3, values3, (error, results) => {
                                         if (error) {
                                             console.error('Error adding new user ' + error.stack);
@@ -118,10 +117,10 @@ module.exports = (pool) => {
                         }
                     });
                 })
-                .catch((error) => {
-                    console.error('Error encrypting pass ' + error);
-                    res.status(500).send('Error encrypting pass ' + error);
-                });
+                    .catch((error) => {
+                        console.error('Error encrypting pass ' + error);
+                        res.status(500).send('Error encrypting pass ' + error);
+                    });
             } else if (isUserExists === true) {
                 res.status(409).json({ message: 'Такой пользователь уже существует' });
             } else {
@@ -133,7 +132,7 @@ module.exports = (pool) => {
     // User login
     router.post('/login', (req, res) => {
         const { username, password } = req.body;
-        
+
         getUser(pool, username, (isUserExists, data) => {
             if (isUserExists === true) {
                 compare(password, data?.password).then((isEqual) => {
@@ -194,10 +193,10 @@ module.exports = (pool) => {
                     }
                 });
             })
-            .catch((error) => {
-                console.error('Error encrypting pass ' + error);
-                res.status(500).send('Error encrypting pass ' + error);
-            });
+                .catch((error) => {
+                    console.error('Error encrypting pass ' + error);
+                    res.status(500).send('Error encrypting pass ' + error);
+                });
         }
         // Changing username
         if (!!username && !password) {
@@ -293,10 +292,10 @@ module.exports = (pool) => {
                             }
                         });
                     })
-                    .catch((error) => {
-                        console.error('Error encrypting pass ' + error);
-                        res.status(500).send('Error encrypting pass ' + error);
-                    });
+                        .catch((error) => {
+                            console.error('Error encrypting pass ' + error);
+                            res.status(500).send('Error encrypting pass ' + error);
+                        });
                 } else if (isUserExists === true) {
                     res.status(409).json({ message: 'Такой пользователь уже существует' });
                 } else {
@@ -438,7 +437,8 @@ module.exports = (pool) => {
         const { status, module, id } = req.query;
         const moduleMap = {
             "Введение": "intro",
-            "Командная строка": "command_line"
+            "Командная строка": "command_line",
+            "Файловая система": "file_system"
         };
         const query = `
             UPDATE modules
@@ -477,7 +477,8 @@ module.exports = (pool) => {
         const { answer, question, module, chapter, is_correct } = req.query;
         const moduleMap = {
             "Введение": "intro",
-            "Командная строка": "command_line"
+            "Командная строка": "command_line",
+            "Файловая система": "file_system"
         };
         const query = `
             UPDATE modules
@@ -570,7 +571,8 @@ module.exports = (pool) => {
         const { question, module, chapter } = req.query;
         const moduleMap = {
             "Введение": "intro",
-            "Командная строка": "command_line"
+            "Командная строка": "command_line",
+            "Файловая система": "file_system"
         };
         const query = `
             UPDATE modules
